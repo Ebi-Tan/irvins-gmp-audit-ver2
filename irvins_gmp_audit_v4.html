@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRVINS — GMP Audit System</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ============================================================
+   IRVINS DESIGN SYSTEM — BLACK & YELLOW
+   ============================================================ */
+:root {
+  /* IRVINS: header = black bg + gold text | body = white bg + black text */
+  --gold: #C9A000;
+  --gold-dark: #A88500;
+  --gold-light: #FFF8D6;
+  --gold-mid: #FFE97A;
+  --hdr-bg: #1C1C1C;       /* header/section title bg */
+  --hdr-text: #F5C400;     /* header/section title text */
+  --body-bg: #FFFFFF;      /* card/body bg */
+  --body-text: #111111;    /* all body text */
+  --page-bg: #F2F3F5;      /* page canvas bg */
+  --border: #DEDEDE;
+  --muted: #666666;
+  --subtle: #888888;
+  --input-bg: #FFFFFF;
+  --input-text: #111111;
+  --success: #2D6A1F;
+  --success-bg: #E8F5E3;
+  --warning: #7A4F00;
+  --warning-bg: #FFF3CD;
+  --danger: #8B1A1A;
+  --danger-bg: #FDE8E8;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--page-bg); color: var(--body-text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+/* ── NAV ── */
+.nav {
+  background: #1C1C1C;
+  border-bottom: 2px solid var(--gold);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  height: 54px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  overflow-x: auto;
+  gap: 0;
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 24px;
+  flex-shrink: 0;
+}
+.nav-logo {
+  background: var(--gold);
+  color: var(--black);
+  font-size: 13px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: .08em;
+}
+.nav-sub { font-size: 12px; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.nav-tab {
+  padding: 0 14px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  color: rgba(255,255,255,0.65);
+  transition: all .15s;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: .02em;
+}
+.nav-tab:hover { color: #ffffff; background: rgba(255,255,255,.1); }
+.nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.nav-right { margin-left: auto; font-size: 11px; color: rgba(255,255,255,0.5); white-space: nowrap; padding-left: 16px; flex-shrink: 0; }
+.nc-badge { background: var(--danger); color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 10px; margin-left: 4px; font-weight: 700; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 20px 16px; max-width: 1020px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius-xl);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-title .dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; flex-shrink: 0; }
+
+/* ── FORM HEADER ── */
+.form-header {
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius-xl);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+}
+.form-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 10px;
+  letter-spacing: .02em;
+}
+.form-fields { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-group label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+}
+.field-group input,
+.field-group select {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: #FFFFFF;
+  color: #111111;
+  min-width: 130px;
+  font-family: var(--font);
+}
+.field-group input:focus,
+.field-group select:focus { outline: none; border-color: var(--gold); }
+.field-group select option { background: var(--page-bg); }
+
+/* ── ROUND SELECTOR ── */
+.round-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.round-btn {
+  padding: 6px 18px;
+  border: 1px solid #DEDEDE;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #666666;
+  transition: all .15s;
+  user-select: none;
+}
+.round-btn:hover { border-color: var(--gold); color: var(--gold); }
+.round-btn.active { background: var(--gold); color: var(--black); border-color: var(--gold); }
+.round-label { font-size: 11px; color: var(--muted); }
+
+/* ── AREA CHIPS ── */
+.area-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.chip {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  cursor: pointer;
+  background: #FFFFFF;
+  color: #555555;
+  transition: all .12s;
+  user-select: none;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--gold); color: var(--gold); }
+.chip.active { background: var(--gold); color: var(--black); border-color: var(--gold); font-weight: 600; }
+.chip .badge { background: var(--danger); color: #fff; border-radius: 10px; padding: 0 5px; font-size: 10px; margin-left: 3px; }
+.chip.active .badge { background: var(--black); color: var(--gold); }
+
+/* ── SCORE STRIP ── */
+.score-strip { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.sc {
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  min-width: 88px;
+}
+.sc .l { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #888888; margin-bottom: 2px; font-weight: 600; }
+.sc .v { font-size: 20px; font-weight: 700; color: #111111; }
+.sc.good .v { color: #2D6A1F; }
+.sc.bad .v { color: #8B1A1A; }
+.sc.gold .v { color: var(--gold); }
+.pct-bar-wrap { flex: 1; min-width: 120px; background: #FFFFFF; border: 1px solid #DEDEDE; border-radius: var(--radius); padding: 8px 14px; display: flex; flex-direction: column; justify-content: center; }
+.pct-bar { height: 7px; background: #E0E0E0; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.pct-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+
+/* ── CAT HEADER ── */
+.cat-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--gold);
+  padding: 10px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+/* ── Q ROW ── */
+.q-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.q-row.fail-bg {
+  background: #FEF5F5;
+  border-radius: 6px;
+  padding: 10px 10px;
+  margin: 2px -10px;
+  border-bottom: none;
+  border: 1px solid rgba(139,26,26,0.25);
+  margin-bottom: 6px;
+}
+.q-top { display: grid; grid-template-columns: 26px 1fr 170px; gap: 8px; align-items: start; }
+.q-num { font-size: 11px; color: var(--gold); font-weight: 700; padding-top: 3px; }
+.q-text { font-size: 13px; color: #111111; line-height: 1.45; }
+.q-pts { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.btn-grp { display: flex; gap: 4px; flex-wrap: wrap; }
+.pf {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius);
+  background: #F8F8F8;
+  color: #555555;
+  cursor: pointer;
+  transition: all .1s;
+  font-weight: 500;
+}
+.pf:hover { border-color: #999999; color: #111111; }
+.pf.pass.active { background: #E8F5E3; color: #2D6A1F; border-color: #2D6A1F; }
+.pf.fail.active { background: #FDE8E8; color: #8B1A1A; border-color: #8B1A1A; }
+.pf.na.active { background: #F0F0F0; color: #555555; border-color: #AAAAAA; font-style: italic; }
+
+/* ── FAIL PANEL ── */
+.fail-panel {
+  margin-top: 10px;
+  background: #FEF8F8;
+  border: 1px solid rgba(139,26,26,0.3);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.fail-panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fail-field label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.fail-field input[type=text],
+.fail-field select,
+.fail-field textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  background: #FFFFFF;
+  color: #111111;
+  font-family: var(--font);
+}
+.fail-field textarea { resize: vertical; min-height: 44px; }
+.fail-field input:focus,
+.fail-field select:focus,
+.fail-field textarea:focus { outline: none; border-color: var(--gold); }
+.fail-field select option { background: #FFFFFF; }
+.photo-upload-area {
+  border: 1px dashed #CCCCCC;
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  color: #888888;
+  position: relative;
+  overflow: hidden;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color .15s;
+}
+.photo-upload-area:hover { border-color: var(--gold); color: var(--gold); }
+.photo-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photo-thumb { width: 100%; max-height: 120px; object-fit: cover; border-radius: 4px; display: block; }
+
+/* ── SUBMIT BTN ── */
+.submit-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px;
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: background .15s;
+  text-transform: uppercase;
+}
+.submit-btn:hover { background: var(--gold-dark); }
+.submit-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.sync-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--gold); color: var(--black);
+  padding: 10px 18px; border-radius: var(--radius-lg);
+  font-size: 13px; font-weight: 700; z-index: 999;
+  opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 320px;
+}
+.toast.show { opacity: 1; }
+
+/* ── PILLS / STATUS ── */
+.pill { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+.pill-g { background: #E8F5E3; color: #2D6A1F; }
+.pill-a { background: #FFF3CD; color: #7A4F00; }
+.pill-r { background: #FDE8E8; color: #8B1A1A; }
+.status-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.status-open { background: #FDE8E8; color: #8B1A1A; }
+.status-closed { background: #E8F5E3; color: #2D6A1F; }
+.status-pending { background: #FFF3CD; color: #7A4F00; }
+
+/* ── NC TRACKER ── */
+.nc-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.nc-filter-bar select,
+.nc-filter-bar input {
+  padding: 6px 10px;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius);
+  font-size: 12px;
+  background: #FFFFFF;
+  color: #111111;
+}
+.nc-filter-bar select option { background: var(--body-bg); }
+.nc-cards { display: flex; flex-direction: column; gap: 12px; }
+.nc-card {
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.nc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #DEDEDE;
+  background: #F8F8F8;
+  flex-wrap: wrap;
+}
+.area-tag { font-size: 11px; font-weight: 700; background: var(--gold); color: var(--black); padding: 2px 8px; border-radius: 10px; }
+.q-ref { font-size: 12px; color: var(--muted); }
+.date-ref { font-size: 11px; color: var(--subtle); margin-left: auto; }
+.nc-card-body { padding: 12px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.nc-body-section label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); display: block; margin-bottom: 4px; font-weight: 600; }
+.nc-body-section p { font-size: 13px; color: #111111; }
+.nc-card-footer { padding: 10px 14px; border-top: 1px solid #DEDEDE; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nc-photo-row { padding: 0 14px 12px; display: flex; gap: 10px; }
+.nc-photo-box { flex: 1; }
+.nc-photo-box label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); display: block; margin-bottom: 4px; font-weight: 600; }
+.nc-photo-box img { width: 100%; max-height: 150px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+.no-photo { background: #F5F5F5; border-radius: 6px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); border: 1px dashed var(--border); }
+.after-input-area { display: flex; flex-direction: column; gap: 5px; }
+.after-input-area input[type=text],
+.after-input-area input[type=date],
+.after-input-area select {
+  padding: 5px 8px; border: 1px solid #DEDEDE;
+  border-radius: var(--radius); font-size: 12px; width: 100%;
+  background: #FFFFFF; color: #111111; font-family: var(--font);
+}
+.after-input-area select option { background: #FFFFFF; }
+.save-nc-btn {
+  font-size: 12px; padding: 6px 14px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--gold); color: var(--black);
+  cursor: pointer; font-weight: 700;
+}
+.save-nc-btn:hover { background: var(--gold-dark); }
+
+/* ── SUMMARY TABLE ── */
+.summary-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.summary-tbl th {
+  text-align: left; font-size: 10px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--gold); padding: 7px 9px;
+  border-bottom: 1px solid var(--border); font-weight: 700;
+}
+.summary-tbl td { padding: 8px 9px; border-bottom: 1px solid #DEDEDE; color: #111111; vertical-align: top; }
+.summary-tbl tr:last-child td { border-bottom: none; }
+.nc-mini { font-size: 11px; color: #8B1A1A; padding: 2px 0; }
+
+/* ── DASHBOARD ── */
+.db-ctrl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.db-ctrl label { font-size: 12px; color: var(--muted); font-weight: 600; }
+.db-ctrl select {
+  padding: 6px 10px; border: 1px solid #DEDEDE;
+  border-radius: var(--radius); font-size: 12px;
+  background: #FFFFFF; color: #111111;
+}
+.db-ctrl select option { background: var(--body-bg); }
+.db-ctrl button {
+  padding: 6px 14px; border: 1px solid var(--gold);
+  border-radius: var(--radius); font-size: 12px; font-weight: 700;
+  background: transparent; color: var(--gold); cursor: pointer;
+  transition: all .15s;
+}
+.db-ctrl button:hover { background: var(--gold); color: var(--black); }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 8px; margin-bottom: 14px; }
+.mc { background: #FFFFFF; border: 1px solid #DEDEDE; border-radius: var(--radius-xl); padding: 12px 14px; }
+.mc .ml { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 3px; font-weight: 600; }
+.mc .mv { font-size: 22px; font-weight: 700; color: #111111; }
+.mc .ms { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.mc.good .mv { color: #2D6A1F; }
+.mc.bad .mv { color: #8B1A1A; }
+.mc.gold .mv { color: var(--gold); }
+.chart-card { background: #FFFFFF; border: 1px solid #DEDEDE; border-radius: var(--radius-xl); padding: 16px 18px; margin-bottom: 14px; }
+.chart-card h3 { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .05em; }
+.area-tbl { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+.area-tbl th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--gold); font-weight: 700; padding: 6px 7px; border-bottom: 1px solid var(--border); }
+.area-tbl td { padding: 7px 7px; border-bottom: 1px solid #DEDEDE; color: #111111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.area-tbl tr:last-child td { border-bottom: none; }
+.mini-bar-bg { height: 5px; background: #E0E0E0; border-radius: 3px; }
+.mini-bar-fill { height: 5px; border-radius: 3px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.insight-card { background: #FFFFFF; border: 1px solid #DEDEDE; border-radius: var(--radius-xl); padding: 14px 16px; }
+.insight-card h4 { font-size: 11px; font-weight: 700; color: var(--gold); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+.insight-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #DEDEDE; font-size: 12px; color: #111111; }
+.insight-row:last-child { border-bottom: none; }
+
+/* ── REPORTS PAGE ── */
+.report-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.report-card-btn {
+  flex: 1; min-width: 180px;
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius-xl);
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: left;
+}
+.report-card-btn:hover { border-color: var(--gold); }
+.report-card-btn.active { border-color: var(--gold); background: rgba(245,196,0,0.08); }
+.report-card-btn .r-icon { font-size: 24px; margin-bottom: 8px; }
+.report-card-btn .r-title { font-size: 13px; font-weight: 700; color: #111111; margin-bottom: 4px; }
+.report-card-btn .r-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.report-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.report-controls select,
+.report-controls input {
+  padding: 7px 10px;
+  border: 1px solid #DEDEDE;
+  border-radius: var(--radius);
+  font-size: 12px;
+  background: #FFFFFF;
+  color: #111111;
+}
+.report-controls select option { background: var(--body-bg); }
+.print-btn {
+  padding: 7px 18px;
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.print-btn:hover { background: var(--gold-dark); }
+.report-preview {
+  background: #FFFFFF;
+  border-radius: var(--radius-xl);
+  color: #111111;
+  min-height: 400px;
+  overflow: hidden;
+  border: 1px solid #DEDEDE;
+}
+
+/* ── PRINT STYLES ── */
+@media print {
+  body { background: white !important; color: black !important; }
+  .nav, .no-print { display: none !important; }
+  .page { display: block !important; padding: 0 !important; max-width: 100% !important; }
+  .report-preview { box-shadow: none; border: none; }
+  #print-frame { border: none; width: 100%; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .q-top { grid-template-columns: 22px 1fr; }
+  .btn-grp { margin-top: 6px; }
+  .fail-panel-row { grid-template-columns: 1fr; }
+  .nc-card-body { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .page { padding: 12px; }
+  .report-card-btn { min-width: 140px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">IRVINS</div>
+    <span class="nav-sub">GMP Audit</span>
+  </div>
+  <div class="nav-tab active" onclick="showPage('audit',this)">Walkdown</div>
+  <div class="nav-tab" onclick="showPage('nctracker',this)">NC Tracker<span class="nc-badge" id="ncBadgeNav" style="display:none"></span></div>
+  <div class="nav-tab" onclick="showPage('summary',this)">Summary</div>
+  <div class="nav-tab" onclick="showPage('dashboard',this)">Dashboard</div>
+  <div class="nav-tab" onclick="showPage('reports',this)">📄 Reports</div>
+  <div class="nav-right" id="lastSync"></div>
+</nav>
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: WALKDOWN AUDIT FORM
+══════════════════════════════════════════ -->
+<div class="page active" id="page-audit">
+  <div class="form-header">
+    <h2>GMP Walkdown Audit</h2>
+    <div class="form-fields">
+      <div class="field-group"><label>Date</label><input type="date" id="auditDate"></div>
+      <div class="field-group"><label>Auditor</label><input type="text" id="auditorName" placeholder="Your name"></div>
+      <div class="field-group"><label>Shift</label>
+        <select id="auditShift"><option value="">Select</option><option>Morning</option><option>Afternoon</option><option>Night</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="round-selector">
+    <span class="round-label">Audit round:</span>
+    <button class="round-btn active" onclick="setRound(1,this)">Round 1</button>
+    <button class="round-btn" onclick="setRound(2,this)">Round 2</button>
+  </div>
+
+  <div class="area-chips" id="areaChips"></div>
+
+  <div class="score-strip">
+    <div class="sc gold"><div class="l">Score</div><div class="v" id="scScore">—</div></div>
+    <div class="sc"><div class="l">Max pts</div><div class="v" id="scMax">—</div></div>
+    <div class="sc gold"><div class="l">%</div><div class="v" id="scPct">—</div></div>
+    <div class="sc bad"><div class="l">Fails</div><div class="v" id="scFails">0</div></div>
+    <div class="pct-bar-wrap">
+      <div class="l" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Completion</div>
+      <div class="pct-bar"><div class="pct-fill" id="progFill" style="width:0%;background:var(--gold)"></div></div>
+    </div>
+  </div>
+
+  <div id="questionArea"></div>
+  <button class="submit-btn" id="submitBtn" onclick="submitAudit()">Submit Area Results</button>
+  <p class="sync-note" id="syncNote">Results are saved locally in your browser and update the dashboard automatically.</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: NC TRACKER
+══════════════════════════════════════════ -->
+<div class="page" id="page-nctracker">
+  <div class="nc-filter-bar">
+    <select id="ncFilterArea" onchange="renderNCTracker()"><option value="">All areas</option></select>
+    <select id="ncFilterStatus" onchange="renderNCTracker()">
+      <option value="">All statuses</option>
+      <option>Open</option><option>In Progress</option><option>Closed</option>
+    </select>
+    <select id="ncFilterMonth" onchange="renderNCTracker()"><option value="">All months</option></select>
+    <select id="ncFilterRound" onchange="renderNCTracker()">
+      <option value="">All rounds</option><option value="1">Round 1</option><option value="2">Round 2</option>
+    </select>
+    <input type="text" id="ncSearch" placeholder="Search…" oninput="renderNCTracker()" style="min-width:140px">
+  </div>
+  <div id="ncSummaryRow" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+  <div class="nc-cards" id="ncCards"></div>
+  <p style="font-size:12px;color:var(--muted);text-align:center;padding:24px;display:none" id="ncEmpty">No non-conformities match current filters.</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: SUMMARY
+══════════════════════════════════════════ -->
+<div class="page" id="page-summary">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+    <select id="sumMonth" onchange="renderSummary()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)"></select>
+    <select id="sumRound" onchange="renderSummary()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)">
+      <option value="">Both rounds</option><option value="1">Round 1 only</option><option value="2">Round 2 only</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Non-conformities per area</div>
+    <div style="overflow-x:auto">
+      <table class="summary-tbl" id="summaryTable">
+        <thead><tr>
+          <th style="width:18%">Area</th>
+          <th style="width:8%">Score</th>
+          <th style="width:8%">%</th>
+          <th style="width:7%">Total NCs</th>
+          <th style="width:6%">Open</th>
+          <th style="width:6%">Closed</th>
+          <th style="width:47%">Non-conformities found</th>
+        </tr></thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="db-ctrl">
+    <label>Month:</label>
+    <select id="dbMonth" onchange="renderDashboard()"></select>
+    <label>Round:</label>
+    <select id="dbRound" onchange="renderDashboard()">
+      <option value="avg">Both (avg)</option>
+      <option value="1">Round 1</option>
+      <option value="2">Round 2</option>
+    </select>
+    <label>View:</label>
+    <select id="dbView" onchange="renderDashboard()">
+      <option value="all">All areas</option>
+      <option value="production">Production</option>
+      <option value="support">Support</option>
+    </select>
+  </div>
+  <div class="metric-grid" id="dbMetrics"></div>
+  <div class="chart-card">
+    <h3>Monthly score trend — site average (%)</h3>
+    <div style="position:relative;width:100%;height:200px">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Score by area — selected month</h3>
+    <div style="position:relative;width:100%" id="areaChartWrap">
+      <canvas id="areaChart"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Area breakdown</h3>
+    <div style="overflow-x:auto">
+      <table class="area-tbl">
+        <thead><tr>
+          <th style="width:28%">Area</th>
+          <th style="width:9%">Score</th>
+          <th style="width:8%">Max</th>
+          <th style="width:9%">%</th>
+          <th style="width:7%">vs prev</th>
+          <th style="width:7%">NCs</th>
+          <th style="width:7%">Open</th>
+          <th style="width:15%">Bar</th>
+        </tr></thead>
+        <tbody id="dbTable"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="insight-card"><h4>Most improved vs previous month</h4><div id="dbImproved"></div></div>
+    <div class="insight-card"><h4>Areas needing attention (&lt;80%)</h4><div id="dbAttention"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: REPORTS
+══════════════════════════════════════════ -->
+<div class="page" id="page-reports">
+  <div class="report-selector">
+    <div class="report-card-btn active" onclick="selectReport('area',this)">
+      <div class="r-icon">📋</div>
+      <div class="r-title">Area Audit Report</div>
+      <div class="r-desc">Full results per area — pass/fail per question, score, NCs. Filterable by month & round.</div>
+    </div>
+    <div class="report-card-btn" onclick="selectReport('trend',this)">
+      <div class="r-icon">📈</div>
+      <div class="r-title">Trend Report</div>
+      <div class="r-desc">Month-by-month score trend for all areas. Shows Round 1 vs Round 2 comparison.</div>
+    </div>
+    <div class="report-card-btn" onclick="selectReport('nc',this)">
+      <div class="r-icon">⚠️</div>
+      <div class="r-title">NC Report</div>
+      <div class="r-desc">All non-conformities with PIC, action required, status, and correction details.</div>
+    </div>
+  </div>
+
+  <div class="report-controls no-print" id="reportControls"></div>
+
+  <div class="no-print" style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+    <button class="print-btn" id="downloadPdfBtn" onclick="printReport()">⬇ Download PDF</button>
+    <span style="font-size:11px;color:var(--muted)">Use "Save as PDF" in the print dialog to get a PDF file</span>
+  </div>
+
+  <div class="report-preview" id="reportPreview"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ── CONFIG ──
+
+// ── STATIC DATA ──
+const AREAS = ["Warehouse","Dry Prep & Decartoning","SEY Prep Room","Wet Prep Room","Main Prep Room","Kitchen","Oven & Cooling Room","Sorting Room","Autopack & Cartoning","Loading Bay","Wash Room","QC Room","Engineering Room","Common Area","DC Storage Area"];
+const PRODUCTION = ["Dry Prep & Decartoning","SEY Prep Room","Wet Prep Room","Main Prep Room","Kitchen","Oven & Cooling Room","Sorting Room","Autopack & Cartoning"];
+const SUPPORT = ["Warehouse","Loading Bay","Wash Room","QC Room","Engineering Room","Common Area","DC Storage Area"];
+const PICS = ["— Select PIC —","Fahmi","Hakim","Abby","Tze Chun","Area Supervisor","Production Lead","Engineering Lead","QC Lead","Other"];
+
+const MAX_PTS = {"Warehouse":404,"Dry Prep & Decartoning":422,"SEY Prep Room":420,"Wet Prep Room":415,"Main Prep Room":410,"Kitchen":208,"Oven & Cooling Room":405,"Sorting Room":390,"Autopack & Cartoning":427,"Loading Bay":208,"Wash Room":260,"QC Room":270,"Engineering Room":233,"Common Area":245,"DC Storage Area":297};
+
+const ALL_Q = [
+  {id:1,cat:"A. Personnel Hygiene",text:"Personnel wear proper PPE",pts:10},
+  {id:2,cat:"A. Personnel Hygiene",text:"Nails are clean, short, and free from nail polish",pts:5},
+  {id:3,cat:"A. Personnel Hygiene",text:"No jewellery, watches, or personal accessories worn",pts:10},
+  {id:4,cat:"A. Personnel Hygiene",text:"Long hair and forearm hair are fully covered",pts:5},
+  {id:5,cat:"A. Personnel Hygiene",text:"Eating, drinking, chewing gum, and smoking prohibited in production areas",pts:10},
+  {id:6,cat:"A. Personnel Hygiene",text:"Handwashing practices are followed",pts:10},
+  {id:7,cat:"A. Personnel Hygiene",text:"Gloves are changed when contaminated or damaged",pts:10},
+  {id:8,cat:"A. Personnel Hygiene",text:"Dedicated PPE (High/Low Care) is followed",pts:5},
+  {id:9,cat:"A. Personnel Hygiene",text:"Personal items are prevented from entering production areas",pts:5},
+  {id:10,cat:"A. Personnel Hygiene",text:"Hygiene rules are clearly displayed",pts:2},
+  {id:11,cat:"B. Cleaning & Sanitation",text:"Cleaning schedules are available and followed",pts:10},
+  {id:12,cat:"B. Cleaning & Sanitation",text:"Cleaning records are complete and signed",pts:5},
+  {id:13,cat:"B. Cleaning & Sanitation",text:"Cleaning tools are clean, labelled, and in good condition",pts:5},
+  {id:14,cat:"B. Cleaning & Sanitation",text:"Product-contact and non-product-contact tools stored separately",pts:10},
+  {id:15,cat:"B. Cleaning & Sanitation",text:"Food contact surfaces are cleaned and sanitised appropriately",pts:10},
+  {id:16,cat:"B. Cleaning & Sanitation",text:"Non-food contact surfaces are kept clean",pts:5},
+  {id:17,cat:"B. Cleaning & Sanitation",text:"Cleaning chemicals stored away from food and packaging",pts:10},
+  {id:18,cat:"B. Cleaning & Sanitation",text:"Storage areas clean, organised, and pest-free",pts:5},
+  {id:19,cat:"C. Pest Control",text:"Pest control programme implemented and effective",pts:5},
+  {id:20,cat:"C. Pest Control",text:"No pest activity observed",pts:10},
+  {id:21,cat:"D. Equipment & Tools",text:"Equipment is suitable for intended use",pts:5},
+  {id:22,cat:"D. Equipment & Tools",text:"Equipment and control panels are clean and hygienic",pts:5},
+  {id:23,cat:"D. Equipment & Tools",text:"Equipment free from rust or damage",pts:10},
+  {id:24,cat:"D. Equipment & Tools",text:"Machine guards and safety devices are present and intact",pts:5},
+  {id:25,cat:"D. Equipment & Tools",text:"Hard-to-clean areas are cleaned",pts:5},
+  {id:26,cat:"D. Equipment & Tools",text:"Utensils and tools are food-grade and in good condition",pts:10},
+  {id:27,cat:"D. Equipment & Tools",text:"Silicon guards and parts are not torn or broken",pts:5},
+  {id:28,cat:"D. Equipment & Tools",text:"Calibration labels are present and valid",pts:5},
+  {id:29,cat:"D. Equipment & Tools",text:"Work order has been completed for maintenance activities",pts:5},
+  {id:30,cat:"D. Equipment & Tools",text:"Trial machinery are clean, and in good condition",pts:5},
+  {id:31,cat:"D. Equipment & Tools",text:"Glass, brittle plastic, and metal controlled",pts:10},
+  {id:32,cat:"D. Equipment & Tools",text:"Unauthorised tools and stationery prohibited",pts:10},
+  {id:33,cat:"E. Storage Control",text:"Materials are clearly identified and labelled",pts:10},
+  {id:34,cat:"E. Storage Control",text:"Material status labels used (Released/On-hold/Rejected)",pts:5},
+  {id:35,cat:"E. Storage Control",text:"Materials stored off the floor and away from walls",pts:5},
+  {id:36,cat:"E. Storage Control",text:"FIFO / FEFO practised",pts:10},
+  {id:37,cat:"E. Storage Control",text:"No expired materials present",pts:10},
+  {id:38,cat:"E. Storage Control",text:"Allergens identified, segregated, and controlled (if applicable)",pts:10},
+  {id:39,cat:"E. Storage Control",text:"Waste bins covered, foot-operated, and emptied regularly",pts:5},
+  {id:40,cat:"E. Storage Control",text:"Waste segregated correctly",pts:5},
+  {id:41,cat:"E. Storage Control",text:"Pallets in good condition",pts:2},
+  {id:42,cat:"E. Storage Control",text:"Temperature monitored where applicable",pts:10},
+  {id:43,cat:"E. Storage Control",text:"Loading and unloading activities controlled",pts:5},
+  {id:44,cat:"E. Storage Control",text:"Vehicles inspected before loading",pts:5},
+  {id:45,cat:"F. Documentation & Control",text:"SOPs available, current, and followed",pts:5},
+  {id:46,cat:"F. Documentation & Control",text:"Critical parameters monitored and recorded",pts:10},
+  {id:47,cat:"F. Documentation & Control",text:"Rework controlled and documented",pts:5},
+  {id:48,cat:"F. Documentation & Control",text:"Cross-contamination prevented between batches",pts:10},
+  {id:49,cat:"F. Documentation & Control",text:"GMP records legible and complete",pts:5},
+  {id:50,cat:"F. Documentation & Control",text:"Documents controlled and up to date",pts:5},
+  {id:51,cat:"F. Documentation & Control",text:"Obsolete documents removed",pts:2},
+  {id:52,cat:"F. Documentation & Control",text:"Any prohibited stationery in production grounds",pts:5},
+  {id:53,cat:"G. Facility & Infrastructure",text:"Access to production areas is controlled",pts:10},
+  {id:54,cat:"G. Facility & Infrastructure",text:"Floors, walls, ceilings, doors, and windows are clean and in good condition",pts:10},
+  {id:55,cat:"G. Facility & Infrastructure",text:"No cracks, peeling paint, or structural damage present",pts:10},
+  {id:56,cat:"G. Facility & Infrastructure",text:"Lighting is adequate and protected with shatterproof covers",pts:5},
+  {id:57,cat:"G. Facility & Infrastructure",text:"Doors close properly, sealed, and pest-proofed",pts:10},
+  {id:58,cat:"G. Facility & Infrastructure",text:"Windows are screened where applicable",pts:5},
+  {id:59,cat:"G. Facility & Infrastructure",text:"Curtain strips are clean and in good condition",pts:2},
+  {id:60,cat:"G. Facility & Infrastructure",text:"Area is free from dust, dirt, cobwebs, and food debris",pts:5},
+  {id:61,cat:"G. Facility & Infrastructure",text:"Surroundings are clean and well maintained",pts:2},
+  {id:62,cat:"G. Facility & Infrastructure",text:"Drains and sumps are clean, functional, odour-free, and piping properly connected",pts:10},
+  {id:63,cat:"G. Facility & Infrastructure",text:"Floor is free from stagnant water",pts:5},
+  {id:64,cat:"G. Facility & Infrastructure",text:"Fans and exhaust hoods are clean and not oily",pts:5},
+  {id:65,cat:"G. Facility & Infrastructure",text:"Emergency exits clear and accessible",pts:5},
+  {id:66,cat:"G. Facility & Infrastructure",text:"Safety signs displayed",pts:2},
+  {id:67,cat:"G. Facility & Infrastructure",text:"Fire extinguishers accessible and serviced",pts:5},
+  {id:68,cat:"G. Facility & Infrastructure",text:"First aid kits available and updated",pts:2},
+  {id:69,cat:"G. Facility & Infrastructure",text:"Regulatory requirements complied with",pts:5},
+  {id:70,cat:"G. Facility & Infrastructure",text:"Overall GMP compliance satisfactory",pts:10}
+];
+
+const AREA_Q = {
+  "Warehouse":[1,2,3,4,5,7,9,10,11,12,13,14,16,17,18,19,20,21,22,23,25,27,28,29,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70],
+  "Dry Prep & Decartoning":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,35,36,37,38,39,41,45,46,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "SEY Prep Room":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,35,36,37,38,39,45,46,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Wet Prep Room":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,29,30,31,32,33,35,36,37,38,39,42,45,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Main Prep Room":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,29,30,31,32,33,35,36,37,38,39,45,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Kitchen":[1,2,5,9,14,17,18,19,20,21,22,23,25,29,30,32,41,49,53,54,55,56,57,60,61,63,65,66,67,68,69,70],
+  "Oven & Cooling Room":[1,3,8,10,11,12,17,18,19,20,21,22,23,25,29,31,39,40,45,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Sorting Room":[1,2,3,4,5,9,10,11,12,17,18,19,20,21,22,23,24,29,30,31,45,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Autopack & Cartoning":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,35,36,38,39,45,46,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Loading Bay":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,29,30,31,32,33,35,36,37,38,39,45,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Wash Room":[1,10,11,12,13,16,17,18,19,20,21,22,23,25,29,31,33,36,37,38,39,40,41,43,44,45,48,49,50,51,52,53,54,55,56,57,58,60,61,63,64,65,66,67,68,69,70],
+  "QC Room":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,25,26,28,29,30,31,32,33,35,36,38,39,45,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Engineering Room":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,28,29,30,31,32,33,35,36,37,38,39,42,45,48,49,50,51,52,53,54,55,56,57,60,61,62,63,64,65,66,67,68,69,70],
+  "Common Area":[1,2,3,4,5,9,10,11,12,17,18,19,20,21,22,23,29,31,39,45,49,50,51,52,53,54,55,56,57,60,61,63,65,66,67,68,69,70],
+  "DC Storage Area":[1,10,11,12,13,16,17,18,19,20,21,22,23,25,29,31,33,36,37,38,39,40,41,43,44,45,48,49,50,51,52,53,54,55,56,57,58,60,61,63,64,65,66,67,68,69,70]
+};
+
+const qMap = {};
+ALL_Q.forEach(q => qMap[q.id] = q);
+
+const SEED = {
+  "Warehouse":{"Dec/2025":{r1:347,r2:351},"Jan/2026":{r1:310,r2:318},"Feb/2026":{r1:325,r2:330},"Mar/2026":{r1:335,r2:340},"Apr/2026":{r1:334,r2:338}},
+  "Dry Prep & Decartoning":{"Dec/2025":{r1:360,r2:368},"Jan/2026":{r1:412,r2:408},"Feb/2026":{r1:417,r2:415},"Mar/2026":{r1:402,r2:407},"Apr/2026":{r1:387,r2:392}},
+  "SEY Prep Room":{"Dec/2025":{r1:343,r2:349},"Jan/2026":{r1:370,r2:365},"Feb/2026":{r1:400,r2:398},"Mar/2026":{r1:370,r2:375},"Apr/2026":{r1:365,r2:370}},
+  "Wet Prep Room":{"Dec/2025":{r1:390,r2:395},"Jan/2026":{r1:410,r2:412},"Feb/2026":{r1:405,r2:408},"Mar/2026":{r1:390,r2:393},"Apr/2026":{r1:405,r2:409}},
+  "Main Prep Room":{"Dec/2025":{r1:380,r2:382},"Jan/2026":{r1:385,r2:383},"Feb/2026":{r1:400,r2:397},"Mar/2026":{r1:375,r2:379},"Apr/2026":{r1:345,r2:350}},
+  "Kitchen":{"Dec/2025":{r1:null,r2:null},"Jan/2026":{r1:161,r2:165},"Feb/2026":{r1:166,r2:168},"Mar/2026":{r1:174,r2:176},"Apr/2026":{r1:143,r2:148}},
+  "Oven & Cooling Room":{"Dec/2025":{r1:395,r2:392},"Jan/2026":{r1:360,r2:363},"Feb/2026":{r1:375,r2:378},"Mar/2026":{r1:345,r2:349},"Apr/2026":{r1:340,r2:344}},
+  "Sorting Room":{"Dec/2025":{r1:390,r2:387},"Jan/2026":{r1:380,r2:376},"Feb/2026":{r1:365,r2:368},"Mar/2026":{r1:350,r2:355},"Apr/2026":{r1:355,r2:358}},
+  "Autopack & Cartoning":{"Dec/2025":{r1:403,r2:399},"Jan/2026":{r1:372,r2:375},"Feb/2026":{r1:387,r2:390},"Mar/2026":{r1:377,r2:381},"Apr/2026":{r1:342,r2:347}},
+  "Loading Bay":{"Dec/2025":{r1:203,r2:205},"Jan/2026":{r1:161,r2:163},"Feb/2026":{r1:181,r2:184},"Mar/2026":{r1:174,r2:177},"Apr/2026":{r1:171,r2:175}},
+  "Wash Room":{"Dec/2025":{r1:235,r2:238},"Jan/2026":{r1:235,r2:237},"Feb/2026":{r1:243,r2:246},"Mar/2026":{r1:220,r2:224},"Apr/2026":{r1:223,r2:227}},
+  "QC Room":{"Dec/2025":{r1:255,r2:258},"Jan/2026":{r1:245,r2:248},"Feb/2026":{r1:265,r2:267},"Mar/2026":{r1:255,r2:258},"Apr/2026":{r1:265,r2:268}},
+  "Engineering Room":{"Dec/2025":{r1:213,r2:215},"Jan/2026":{r1:206,r2:209},"Feb/2026":{r1:218,r2:220},"Mar/2026":{r1:213,r2:216},"Apr/2026":{r1:213,r2:215}},
+  "Common Area":{"Dec/2025":{r1:198,r2:202},"Jan/2026":{r1:158,r2:161},"Feb/2026":{r1:215,r2:218},"Mar/2026":{r1:180,r2:184},"Apr/2026":{r1:201,r2:205}},
+  "DC Storage Area":{"Dec/2025":{r1:245,r2:248},"Jan/2026":{r1:263,r2:266},"Feb/2026":{r1:275,r2:278},"Mar/2026":{r1:265,r2:268},"Apr/2026":{r1:267,r2:270}}
+};
+
+// ── STATE ──
+// Load saved data from localStorage, fall back to seed
+const _saved = localStorage.getItem('irvins_livedata');
+let liveData = _saved ? JSON.parse(_saved) : JSON.parse(JSON.stringify(SEED));
+let currentArea = AREAS[0];
+let currentRound = 1;
+
+// auditState[area][round][qid] = {result, remark, pic, action, beforePhoto}
+let auditState = {};
+AREAS.forEach(a => { auditState[a] = {1:{}, 2:{}}; });
+
+let ncStore = JSON.parse(localStorage.getItem('irvins_ncs_v3') || '[]');
+
+function saveNCs() {
+  localStorage.setItem('irvins_ncs_v3', JSON.stringify(ncStore));
+  updateNCBadge();
+}
+
+function updateNCBadge() {
+  const open = ncStore.filter(n => n.status !== 'Closed').length;
+  const badge = document.getElementById('ncBadgeNav');
+  if (open > 0) { badge.textContent = open; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
+}
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+
+// ── AUDIT FORM ──
+function initAuditDate() {
+  const d = new Date();
+  document.getElementById('auditDate').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function setRound(r, btn) {
+  currentRound = r;
+  document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAuditArea();
+}
+
+function buildChips() {
+  const c = document.getElementById('areaChips');
+  c.innerHTML = '';
+  AREAS.forEach(a => {
+    const fails = countFails(a, currentRound);
+    const b = document.createElement('div');
+    b.className = 'chip' + (a === currentArea ? ' active' : '');
+    b.innerHTML = a + (fails > 0 ? `<span class="badge">${fails}</span>` : '');
+    b.onclick = () => { currentArea = a; renderAuditArea(); };
+    c.appendChild(b);
+  });
+}
+
+function countFails(area, round) {
+  return Object.values(auditState[area][round]).filter(v => v && v.result === 'fail').length;
+}
+
+function renderAuditArea() {
+  buildChips();
+  renderScore();
+  renderQuestions();
+}
+
+function renderScore() {
+  const qids = AREA_Q[currentArea] || [];
+  const s = auditState[currentArea][currentRound];
+  let score = 0, max = 0, fails = 0, answered = 0;
+  qids.forEach(id => {
+    const q = qMap[id]; if (!q) return;
+    const r = s[id] ? s[id].result : null;
+    if (r === 'pass') { score += q.pts; max += q.pts; answered++; }
+    else if (r === 'fail') { max += q.pts; fails++; answered++; }
+    else if (r === 'na') { answered++; }
+    else { max += q.pts; }
+  });
+  const pct = max > 0 ? Math.round(score / max * 100) : 0;
+  const comp = qids.length > 0 ? Math.round(answered / qids.length * 100) : 0;
+  document.getElementById('scScore').textContent = score;
+  document.getElementById('scMax').textContent = max;
+  document.getElementById('scPct').textContent = pct + '%';
+  document.getElementById('scFails').textContent = fails;
+  const fill = document.getElementById('progFill');
+  fill.style.width = comp + '%';
+  fill.style.background = pct >= 90 ? '#5BB833' : pct >= 75 ? '#F5C400' : '#E05555';
+}
+
+function renderQuestions() {
+  const qids = AREA_Q[currentArea] || [];
+  const s = auditState[currentArea][currentRound];
+  const container = document.getElementById('questionArea');
+  container.innerHTML = '';
+  const cats = {};
+  qids.forEach(id => {
+    const q = qMap[id]; if (!q) return;
+    if (!cats[q.cat]) cats[q.cat] = [];
+    cats[q.cat].push(q);
+  });
+  Object.entries(cats).forEach(([cat, qs]) => {
+    const hdr = document.createElement('div');
+    hdr.className = 'cat-header';
+    hdr.textContent = cat;
+    container.appendChild(hdr);
+    qs.forEach(q => {
+      const r = s[q.id] ? s[q.id].result : null;
+      const row = document.createElement('div');
+      row.className = 'q-row' + (r === 'fail' ? ' fail-bg' : '');
+      const picOpts = PICS.map(p => `<option value="${p}" ${(s[q.id]&&s[q.id].pic===p)?'selected':''}>${p}</option>`).join('');
+      row.innerHTML = `
+        <div class="q-top">
+          <div class="q-num">${q.id}</div>
+          <div><div class="q-text">${q.text}</div><div class="q-pts">${q.pts} pts</div></div>
+          <div class="btn-grp">
+            <button class="pf pass${r==='pass'?' active':''}" onclick="setResult(${q.id},'pass')">✓ Pass</button>
+            <button class="pf fail${r==='fail'?' active':''}" onclick="setResult(${q.id},'fail')">✗ Fail</button>
+            <button class="pf na${r==='na'?' active':''}" onclick="setResult(${q.id},'na')">N/A</button>
+          </div>
+        </div>
+        ${r === 'fail' ? `
+        <div class="fail-panel">
+          <div class="fail-panel-row">
+            <div class="fail-field">
+              <label>Remarks / Finding description</label>
+              <textarea rows="2" placeholder="Describe the issue observed…" onchange="setField(${q.id},'remark',this.value)">${s[q.id]?s[q.id].remark||'':''}</textarea>
+            </div>
+            <div class="fail-field">
+              <label>Assign PIC to close</label>
+              <select onchange="setField(${q.id},'pic',this.value)">${picOpts}</select>
+            </div>
+          </div>
+          <div class="fail-panel-row">
+            <div class="fail-field">
+              <label>Required corrective action</label>
+              <textarea rows="2" placeholder="What must be done to close this NC?" onchange="setField(${q.id},'action',this.value)">${s[q.id]?s[q.id].action||'':''}</textarea>
+            </div>
+            <div class="fail-field">
+              <label>Before photo (tap to capture)</label>
+              <div class="photo-upload-area" onclick="document.getElementById('bf-${q.id}').click()">
+                <input type="file" id="bf-${q.id}" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(${q.id},'before',this)">
+                ${s[q.id]&&s[q.id].beforePhoto?`<img src="${s[q.id].beforePhoto}" class="photo-thumb" alt="Before">`:`<span>📷 Take before photo</span>`}
+              </div>
+            </div>
+          </div>
+        </div>` : ''}
+      `;
+      container.appendChild(row);
+    });
+  });
+}
+
+function setResult(id, result) {
+  const s = auditState[currentArea][currentRound];
+  if (!s[id]) s[id] = {result:null,remark:'',pic:'',action:'',beforePhoto:null};
+  s[id].result = s[id].result === result ? null : result;
+  renderAuditArea();
+}
+
+function setField(id, field, val) {
+  const s = auditState[currentArea][currentRound];
+  if (!s[id]) s[id] = {result:'fail',remark:'',pic:'',action:'',beforePhoto:null};
+  s[id][field] = val;
+}
+
+function handlePhoto(id, type, input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const s = auditState[currentArea][currentRound];
+    if (!s[id]) s[id] = {};
+    s[id][type+'Photo'] = e.target.result;
+    const el = document.getElementById(`bf-${id}`);
+    if (el && el.parentElement) {
+      el.parentElement.innerHTML = `<input type="file" id="bf-${id}" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(${id},'${type}',this)"><img src="${e.target.result}" class="photo-thumb" alt="${type}" onclick="document.getElementById('bf-${id}').click()">`;
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function submitAudit() {
+  const date = document.getElementById('auditDate').value;
+  const auditor = document.getElementById('auditorName').value;
+  const shift = document.getElementById('auditShift').value;
+  if (!date || !auditor) { showToast('Please fill in date and auditor name.'); return; }
+
+  const monthKey = formatMonthKey(date);
+  const qids = AREA_Q[currentArea] || [];
+  const s = auditState[currentArea][currentRound];
+  let score = 0, max = 0;
+
+  qids.forEach(id => {
+    const q = qMap[id]; if (!q) return;
+    const r = s[id] ? s[id].result : null;
+    if (r === 'pass') { score += q.pts; max += q.pts; }
+    else if (r === 'fail') { max += q.pts; }
+    else if (r !== 'na') { max += q.pts; }
+  });
+
+  const pct = max > 0 ? Math.round(score / max * 100) : 0;
+  const rKey = 'r' + currentRound;
+
+  if (!liveData[currentArea]) liveData[currentArea] = {};
+  if (!liveData[currentArea][monthKey]) liveData[currentArea][monthKey] = {r1:null,r2:null};
+  liveData[currentArea][monthKey][rKey] = score;
+
+  // Save NCs
+  const failIds = qids.filter(id => s[id] && s[id].result === 'fail');
+  failIds.forEach(id => {
+    const q = qMap[id];
+    const existing = ncStore.find(n => n.area===currentArea && n.qid===id && n.monthKey===monthKey && n.round===currentRound);
+    const ncData = {
+      id: genId(), area: currentArea, date, auditor, monthKey,
+      round: currentRound, qid: id, qtext: q.text, pts: q.pts, cat: q.cat,
+      remark: s[id].remark||'', pic: s[id].pic||'', action: s[id].action||'',
+      beforePhoto: s[id].beforePhoto||null, afterPhoto: null,
+      correctedDate: '', correctionNote: '', status: 'Open'
+    };
+    if (!existing) ncStore.push(ncData);
+    else { existing.remark=ncData.remark||existing.remark; existing.pic=ncData.pic||existing.pic; existing.action=ncData.action||existing.action; existing.beforePhoto=ncData.beforePhoto||existing.beforePhoto; }
+  });
+  saveNCs();
+  rebuildMonthSelectors();
+
+  // Save liveData to localStorage for persistence
+  localStorage.setItem('irvins_livedata', JSON.stringify(liveData));
+  const ts = new Date().toLocaleString('en-SG',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  const lastSyncEl = document.getElementById('lastSync');
+  if (lastSyncEl) lastSyncEl.textContent = 'Saved '+ts;
+  showToast(`${currentArea} R${currentRound} saved — ${score}/${max} (${pct}%)`);
+}
+
+function formatMonthKey(dateStr) {
+  const d = new Date(dateStr);
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] + '/' + d.getFullYear();
+}
+
+// ── NC TRACKER ──
+function renderNCTracker() {
+  const fArea = document.getElementById('ncFilterArea').value;
+  const fStatus = document.getElementById('ncFilterStatus').value;
+  const fMonth = document.getElementById('ncFilterMonth').value;
+  const fRound = document.getElementById('ncFilterRound').value;
+  const search = document.getElementById('ncSearch').value.toLowerCase();
+
+  let filtered = ncStore.filter(n => {
+    if (fArea && n.area !== fArea) return false;
+    if (fStatus && n.status !== fStatus) return false;
+    if (fMonth && n.monthKey !== fMonth) return false;
+    if (fRound && String(n.round) !== fRound) return false;
+    if (search && !n.qtext.toLowerCase().includes(search) && !n.remark.toLowerCase().includes(search) && !n.area.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const open = filtered.filter(n=>n.status==='Open').length;
+  const inp = filtered.filter(n=>n.status==='In Progress').length;
+  const closed = filtered.filter(n=>n.status==='Closed').length;
+  document.getElementById('ncSummaryRow').innerHTML = `
+    <span class="status-badge status-open">Open: ${open}</span>
+    <span class="status-badge status-pending">In Progress: ${inp}</span>
+    <span class="status-badge status-closed">Closed: ${closed}</span>
+    <span style="font-size:12px;color:var(--muted);margin-left:4px">Total: ${filtered.length}</span>
+  `;
+
+  const container = document.getElementById('ncCards');
+  const empty = document.getElementById('ncEmpty');
+  container.innerHTML = '';
+  if (filtered.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const sOrd = {'Open':0,'In Progress':1,'Closed':2};
+  filtered.sort((a,b) => (sOrd[a.status]||0)-(sOrd[b.status]||0));
+
+  filtered.forEach(nc => {
+    const sCls = nc.status==='Closed'?'status-closed':nc.status==='In Progress'?'status-pending':'status-open';
+    const card = document.createElement('div');
+    card.className = 'nc-card';
+    card.innerHTML = `
+      <div class="nc-card-header">
+        <span class="area-tag">${nc.area}</span>
+        <span class="q-ref">Q${nc.qid} · Round ${nc.round||1}</span>
+        <span class="status-badge ${sCls}">${nc.status}</span>
+        <span class="date-ref">${nc.date} · ${nc.monthKey}</span>
+      </div>
+      <div class="nc-card-body">
+        <div class="nc-body-section">
+          <label>Finding</label>
+          <p><strong>${nc.qtext}</strong></p>
+          ${nc.remark?`<p style="color:var(--muted);margin-top:4px;font-size:12px">${nc.remark}</p>`:''}
+        </div>
+        <div class="nc-body-section">
+          <label>PIC assigned</label>
+          <p>${nc.pic&&nc.pic!=='— Select PIC —'?nc.pic:'<span style="color:var(--muted)">Not assigned</span>'}</p>
+          <label style="margin-top:8px">Required action</label>
+          <p style="font-size:12px;color:var(--muted)">${nc.action||'Not specified'}</p>
+        </div>
+      </div>
+      <div class="nc-photo-row">
+        <div class="nc-photo-box">
+          <label>Before (auditor)</label>
+          ${nc.beforePhoto?`<img src="${nc.beforePhoto}" alt="Before">`:`<div class="no-photo">No photo</div>`}
+        </div>
+        <div class="nc-photo-box">
+          <label>After (PIC uploads)</label>
+          ${nc.afterPhoto?`<img src="${nc.afterPhoto}" alt="After">`:`<div class="no-photo" style="flex-direction:column;gap:4px;cursor:pointer" onclick="document.getElementById('af-${nc.id}').click()">
+            <input type="file" id="af-${nc.id}" accept="image/*" capture="environment" style="display:none" onchange="handleAfterPhoto('${nc.id}',this)">
+            <span>📷 Upload after photo</span>
+          </div>`}
+        </div>
+      </div>
+      <div class="nc-card-footer">
+        <div class="after-input-area" style="flex:1;min-width:100px">
+          <select id="ncs-${nc.id}">
+            <option ${nc.status==='Open'?'selected':''}>Open</option>
+            <option ${nc.status==='In Progress'?'selected':''}>In Progress</option>
+            <option ${nc.status==='Closed'?'selected':''}>Closed</option>
+          </select>
+        </div>
+        <div class="after-input-area" style="flex:1;min-width:110px">
+          <input type="date" id="ncd-${nc.id}" value="${nc.correctedDate||''}">
+        </div>
+        <div class="after-input-area" style="flex:2;min-width:140px">
+          <input type="text" id="ncn-${nc.id}" value="${nc.correctionNote||''}" placeholder="Correction note…">
+        </div>
+        <button class="save-nc-btn" onclick="saveNCCard('${nc.id}')">Save</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function handleAfterPhoto(ncId, input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const nc = ncStore.find(n=>n.id===ncId);
+    if (nc) { nc.afterPhoto = e.target.result; saveNCs(); renderNCTracker(); }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function saveNCCard(ncId) {
+  const nc = ncStore.find(n=>n.id===ncId);
+  if (!nc) return;
+  nc.status = document.getElementById(`ncs-${ncId}`)?.value || nc.status;
+  nc.correctedDate = document.getElementById(`ncd-${ncId}`)?.value || nc.correctedDate;
+  nc.correctionNote = document.getElementById(`ncn-${ncId}`)?.value || nc.correctionNote;
+  saveNCs(); showToast('NC updated.'); renderNCTracker();
+}
+
+function initNCFilters() {
+  document.getElementById('ncFilterArea').innerHTML = '<option value="">All areas</option>' + AREAS.map(a=>`<option>${a}</option>`).join('');
+  updateNCMonthFilter();
+}
+
+function updateNCMonthFilter() {
+  const months = getAllMonths();
+  ['ncFilterMonth'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">All months</option>' + months.map(m=>`<option>${m}</option>`).join('');
+  });
+}
+
+// ── SUMMARY ──
+function renderSummary() {
+  const month = document.getElementById('sumMonth').value;
+  const roundFilter = document.getElementById('sumRound').value;
+  const tbody = document.getElementById('summaryBody');
+  tbody.innerHTML = '';
+  AREAS.forEach(area => {
+    const mData = liveData[area]&&liveData[area][month]?liveData[area][month]:{r1:null,r2:null};
+    let scoreDisplay = '—', pctDisplay = '—';
+    if (roundFilter==='1' && mData.r1!=null) { scoreDisplay=mData.r1; const p=Math.round(mData.r1/MAX_PTS[area]*100); pctDisplay=`<span class="pill ${pillCls(p)}">${p}%</span>`; }
+    else if (roundFilter==='2' && mData.r2!=null) { scoreDisplay=mData.r2; const p=Math.round(mData.r2/MAX_PTS[area]*100); pctDisplay=`<span class="pill ${pillCls(p)}">${p}%</span>`; }
+    else if (!roundFilter) {
+      const scores = [mData.r1,mData.r2].filter(v=>v!=null);
+      if (scores.length) { const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length); scoreDisplay=(mData.r1!=null?'R1:'+mData.r1:'')+(mData.r2!=null?' R2:'+mData.r2:''); const p=Math.round(avg/MAX_PTS[area]*100); pctDisplay=`<span class="pill ${pillCls(p)}">${p}%</span>`; }
+    }
+    const areaNCs = ncStore.filter(n=>n.area===area&&(!month||n.monthKey===month)&&(!roundFilter||String(n.round)===roundFilter));
+    const openNCs = areaNCs.filter(n=>n.status!=='Closed').length;
+    const closedNCs = areaNCs.filter(n=>n.status==='Closed').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:var(--body-text)">${area}</td>
+      <td style="color:var(--muted)">${scoreDisplay}</td>
+      <td>${pctDisplay}</td>
+      <td style="text-align:center;font-weight:700;color:${areaNCs.length>0?'#E05555':'#6FCF45'}">${areaNCs.length}</td>
+      <td style="text-align:center;font-weight:700;color:${openNCs>0?'#E05555':'#6FCF45'}">${openNCs}</td>
+      <td style="text-align:center;font-weight:700;color:${closedNCs>0?'#6FCF45':'var(--muted)'}">${closedNCs}</td>
+      <td>${areaNCs.length===0?'<span style="color:var(--muted);font-size:11px">None this period</span>':areaNCs.map(n=>`<div class="nc-mini">• Q${n.qid} R${n.round}: ${n.qtext}${n.remark?' — '+n.remark:''} <span style="color:${n.status==='Closed'?'#6FCF45':'#E05555'}">[${n.status}]</span></div>`).join('')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── DASHBOARD ──
+let trendChart = null, areaChart = null;
+
+function getAllMonths() {
+  const set = new Set();
+  Object.values(liveData).forEach(ao => Object.keys(ao).forEach(m => { const d=ao[m]; if(d&&(d.r1!=null||d.r2!=null)) set.add(m); }));
+  const order = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return [...set].sort((a,b)=>{ const[ma,ya]=a.split('/');const[mb,yb]=b.split('/'); return ya!==yb?ya-yb:order.indexOf(ma)-order.indexOf(mb); });
+}
+
+function getScore(area, month, round) {
+  const d = liveData[area]&&liveData[area][month];
+  if (!d) return null;
+  if (round==='1') return d.r1;
+  if (round==='2') return d.r2;
+  const vals=[d.r1,d.r2].filter(v=>v!=null);
+  return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+}
+
+function avgPct(month, round) {
+  let tot=0,cnt=0;
+  AREAS.forEach(a=>{ const sc=getScore(a,month,round); if(sc!=null){tot+=Math.round(sc/MAX_PTS[a]*100);cnt++;} });
+  return cnt?Math.round(tot/cnt):null;
+}
+
+function pillCls(p){return p>=90?'pill-g':p>=75?'pill-a':'pill-r';}
+function barCol(p){return p>=90?'#5BB833':p>=75?'#F5C400':'#E05555';}
+
+function rebuildMonthSelectors() {
+  const months = getAllMonths();
+  ['dbMonth','sumMonth'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel)return;
+    const cur=sel.value; sel.innerHTML='';
+    months.forEach((m,i)=>{const o=document.createElement('option');o.value=m;o.textContent=m;if(m===cur||(!cur&&i===months.length-1))o.selected=true;sel.appendChild(o);});
+  });
+  updateNCMonthFilter();
+}
+
+function renderDashboard() {
+  const month = document.getElementById('dbMonth').value;
+  const round = document.getElementById('dbRound').value;
+  const view = document.getElementById('dbView').value;
+  const months = getAllMonths();
+  const monthIdx = months.indexOf(month);
+  const prevMonth = monthIdx>0?months[monthIdx-1]:null;
+
+  let areas = AREAS;
+  if(view==='production') areas=PRODUCTION;
+  if(view==='support') areas=SUPPORT;
+
+  const areaData = areas.map(a=>{
+    const sc=getScore(a,month,round);
+    const pct=sc!=null?Math.round(sc/MAX_PTS[a]*100):null;
+    return{name:a,score:sc,max:MAX_PTS[a],pct};
+  }).filter(d=>d.pct!=null).sort((a,b)=>b.pct-a.pct);
+
+  const cur = avgPct(month,round);
+  const prev = prevMonth?avgPct(prevMonth,round):null;
+  const diff = prev!=null&&cur!=null?cur-prev:null;
+  const failAreas = areaData.filter(d=>d.pct<75).length;
+  const openNCs = ncStore.filter(n=>n.status!=='Closed'&&n.monthKey===month).length;
+  const best=areaData[0],worst=areaData[areaData.length-1];
+
+  document.getElementById('dbMetrics').innerHTML=`
+    <div class="mc${cur>=90?' good':cur!=null&&cur<75?' bad':''}">
+      <div class="ml">Site Average</div><div class="mv">${cur!=null?cur+'%':'—'}</div>
+      <div class="ms">${diff!=null?(diff>=0?'+':'')+diff+'% vs prev':'—'}</div>
+    </div>
+    <div class="mc"><div class="ml">Areas Audited</div><div class="mv">${areaData.length}</div><div class="ms">of ${AREAS.length}</div></div>
+    <div class="mc${failAreas>0?' bad':' good'}"><div class="ml">Below 75%</div><div class="mv">${failAreas}</div><div class="ms">at risk</div></div>
+    <div class="mc${openNCs>0?' bad':' good'}"><div class="ml">Open NCs</div><div class="mv">${openNCs}</div><div class="ms">pending</div></div>
+    <div class="mc gold"><div class="ml">Top Area</div><div class="mv" style="font-size:13px;padding-top:2px">${best?best.name:'—'}</div><div class="ms">${best?best.pct+'%':'—'}</div></div>
+  `;
+
+  // Trend — show r1, r2, avg lines
+  const tCtx=document.getElementById('trendChart').getContext('2d');
+  if(trendChart)trendChart.destroy();
+  trendChart=new Chart(tCtx,{type:'line',data:{labels:months,datasets:[
+    {label:'Round 1',data:months.map(m=>avgPct(m,'1')),borderColor:'#F5C400',backgroundColor:'rgba(245,196,0,0.08)',pointBackgroundColor:'#F5C400',pointRadius:4,tension:0.3,fill:false,borderWidth:2,spanGaps:true},
+    {label:'Round 2',data:months.map(m=>avgPct(m,'2')),borderColor:'#5BB833',backgroundColor:'rgba(91,184,51,0.08)',pointBackgroundColor:'#5BB833',pointRadius:4,tension:0.3,fill:false,borderWidth:2,spanGaps:true,borderDash:[4,3]},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#555',font:{size:11}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}%`}}},scales:{y:{min:60,max:100,ticks:{callback:v=>v+'%',font:{size:10},color:'#444'},grid:{color:'rgba(0,0,0,0.06)'}},x:{ticks:{font:{size:10},color:'#444',autoSkip:false,maxRotation:30},grid:{display:false}}}}});
+
+  const wrap=document.getElementById('areaChartWrap');
+  wrap.style.height=(areaData.length*30+70)+'px';
+  const aCtx=document.getElementById('areaChart').getContext('2d');
+  if(areaChart)areaChart.destroy();
+  areaChart=new Chart(aCtx,{type:'bar',data:{labels:areaData.map(d=>d.name),datasets:[{label:'Score %',data:areaData.map(d=>d.pct),backgroundColor:areaData.map(d=>barCol(d.pct)),borderWidth:0,barThickness:16}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.x}% (${areaData[ctx.dataIndex].score}/${areaData[ctx.dataIndex].max})`}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10},color:'#444'},grid:{color:'rgba(0,0,0,0.06)'}},y:{ticks:{font:{size:10},color:'#555'},grid:{display:false}}}}});
+
+  const tbody=document.getElementById('dbTable'); tbody.innerHTML='';
+  areaData.forEach(d=>{
+    const pp=prevMonth?getScore(d.name,prevMonth,round):null;
+    const ppPct=pp!=null?Math.round(pp/d.max*100):null;
+    const arrow=ppPct!=null?(d.pct>ppPct?'<span style="color:#5BB833">▲</span>':d.pct<ppPct?'<span style="color:#E05555">▼</span>':'—'):'—';
+    const areaNCs=ncStore.filter(n=>n.area===d.name&&n.monthKey===month);
+    const openCnt=areaNCs.filter(n=>n.status!=='Closed').length;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td title="${d.name}" style="font-weight:500">${d.name}</td><td>${d.score}</td><td>${d.max}</td><td><span class="pill ${pillCls(d.pct)}">${d.pct}%</span></td><td>${arrow}</td><td style="text-align:center;color:${areaNCs.length>0?'#E05555':'#6FCF45'};font-weight:700">${areaNCs.length}</td><td style="text-align:center">${openCnt>0?`<span style="color:#F5C400;font-weight:700">${openCnt}</span>`:'<span style="color:#5BB833">✓</span>'}</td><td><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${d.pct}%;background:${barCol(d.pct)}"></div></div></td>`;
+    tbody.appendChild(tr);
+  });
+
+  if(prevMonth){
+    const deltas=AREAS.map(a=>{const c=getScore(a,month,round);const p=getScore(a,prevMonth,round);if(c==null||p==null)return null;const cp=Math.round(c/MAX_PTS[a]*100);const pp=Math.round(p/MAX_PTS[a]*100);return{name:a,delta:cp-pp,pct:cp};}).filter(Boolean).sort((a,b)=>b.delta-a.delta);
+    document.getElementById('dbImproved').innerHTML=deltas.slice(0,3).map(d=>`<div class="insight-row"><span>${d.name}</span><span style="color:${d.delta>=0?'#5BB833':'#E05555'};font-weight:700">${d.delta>=0?'+':''}${d.delta}%</span></div>`).join('');
+    const attn=[...areaData].filter(d=>d.pct<80).sort((a,b)=>a.pct-b.pct).slice(0,5);
+    document.getElementById('dbAttention').innerHTML=attn.length?attn.map(d=>`<div class="insight-row"><span>${d.name}</span><span class="pill ${pillCls(d.pct)}">${d.pct}%</span></div>`).join(''):'<p style="color:var(--muted);font-size:11px;padding:6px 0">All areas ≥ 80% 🎉</p>';
+  } else {
+    document.getElementById('dbImproved').innerHTML='<p style="color:var(--muted);font-size:11px">No previous month to compare.</p>';
+    document.getElementById('dbAttention').innerHTML=areaData.filter(d=>d.pct<80).map(d=>`<div class="insight-row"><span>${d.name}</span><span class="pill ${pillCls(d.pct)}">${d.pct}%</span></div>`).join('')||'<p style="color:var(--muted);font-size:11px">All areas ≥ 80%.</p>';
+  }
+}
+
+
+
+// ══════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════
+let currentReport = 'area';
+
+function selectReport(type, btn) {
+  currentReport = type;
+  document.querySelectorAll('.report-card-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildReportControls();
+  renderReport();
+}
+
+function buildReportControls() {
+  const months = getAllMonths();
+  const monthOpts = months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  const ctrl = document.getElementById('reportControls');
+
+  if (currentReport === 'area') {
+    ctrl.innerHTML = `
+      <label style="font-size:12px;color:var(--muted);font-weight:600">Month:</label>
+      <select id="rptMonth" onchange="renderReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)">${monthOpts}</select>
+      <select id="rptRound" onchange="renderReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)">
+        <option value="avg">Both rounds (avg)</option><option value="1">Round 1</option><option value="2">Round 2</option>
+      </select>
+      <select id="rptArea" onchange="renderReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)">
+        <option value="all">All areas</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}
+      </select>`;
+  } else if (currentReport === 'trend') {
+    ctrl.innerHTML = `
+      <label style="font-size:12px;color:var(--muted);font-weight:600">View:</label>
+      <select id="rptView" onchange="renderReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)">
+        <option value="all">All areas</option><option value="production">Production</option><option value="support">Support</option>
+      </select>`;
+  } else {
+    ctrl.innerHTML = `
+      <label style="font-size:12px;color:var(--muted);font-weight:600">Month:</label>
+      <select id="rptMonth" onchange="renderReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)"><option value="">All months</option>${monthOpts}</select>
+      <select id="rptStatus" onchange="renderReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--body-bg);color:var(--body-text)">
+        <option value="">All statuses</option><option>Open</option><option>In Progress</option><option>Closed</option>
+      </select>`;
+  }
+  // set last month as default
+  if(document.getElementById('rptMonth')) {
+    const opts = document.getElementById('rptMonth').options;
+    if(opts.length>1) opts[opts.length-1].selected=true;
+  }
+}
+
+function renderReport() {
+  if (currentReport === 'area') renderAreaReport();
+  else if (currentReport === 'trend') renderTrendReport();
+  else renderNCReport();
+}
+
+const RPT_CSS = `
+  <style>
+    /* IRVINS STANDARD: header = black bg + gold text | body = white bg + black text */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;color:#111111;background:#FFFFFF}
+    /* ── Report header: black bg, gold text ── */
+    .rpt-header{background:#1C1C1C;color:#F5C400;padding:20px 28px;display:flex;align-items:center;justify-content:space-between}
+    .rpt-logo{background:#F5C400;color:#111111;font-size:16px;font-weight:900;padding:5px 12px;border-radius:4px;letter-spacing:.08em}
+    .rpt-title{font-size:18px;font-weight:700;color:#F5C400;margin-top:4px}
+    .rpt-meta{font-size:12px;color:#AAAAAA;margin-top:2px}
+    /* ── Body: white bg, black text ── */
+    .rpt-body{padding:20px 28px;background:#FFFFFF;color:#111111}
+    /* ── Section titles: black bg, gold text ── */
+    .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#F5C400;background:#1C1C1C;padding:6px 12px;border-radius:4px;margin:18px 0 10px}
+    /* ── Tables: white bg, black text ── */
+    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;background:#FFFFFF}
+    th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#111111;padding:7px 8px;border-bottom:2px solid #C9A000;font-weight:700;background:#F5F5F5}
+    td{padding:7px 8px;border-bottom:1px solid #EEEEEE;vertical-align:top;color:#111111;background:#FFFFFF}
+    tr:last-child td{border-bottom:none}
+    /* ── Area header rows: light grey bg, black text ── */
+    .area-header{background:#F5F5F5;color:#111111;font-weight:700;font-size:13px;padding:10px 8px;border-top:2px solid #C9A000;border-bottom:1px solid #DDDDDD;display:flex;justify-content:space-between;align-items:center}
+    /* ── NC rows: light red bg, dark red text ── */
+    .nc-row td{background:#FEF2F2;color:#8B1A1A}
+    /* ── Status / score pills ── */
+    .pass{color:#2D6A1F;font-weight:700}
+    .fail{color:#8B1A1A;font-weight:700}
+    .na{color:#888888;font-style:italic}
+    .score-box{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+    .score-g{background:#E8F5E3;color:#2D6A1F}
+    .score-a{background:#FFF3CD;color:#7A4F00}
+    .score-r{background:#FDE8E8;color:#8B1A1A}
+    /* ── Footer ── */
+    .footer{margin-top:24px;border-top:2px solid #C9A000;padding-top:10px;font-size:10px;color:#888888;text-align:center}
+    /* ── Trend/misc ── */
+    .trend-cell{text-align:center;font-size:12px;font-weight:700;color:#111111;background:#FFFFFF}
+    .round-label{font-size:10px;color:#888888}
+    .page-break{page-break-before:always}
+    @media print{body{margin:0;background:#FFFFFF!important;color:#111111!important}}
+  </style>
+`;
+
+function renderAreaReport() {
+  const month = document.getElementById('rptMonth')?.value || getAllMonths().slice(-1)[0];
+  const round = document.getElementById('rptRound')?.value || 'avg';
+  const areaFilter = document.getElementById('rptArea')?.value || 'all';
+  const roundLabel = round==='1'?'Round 1':round==='2'?'Round 2':'Both Rounds (Average)';
+  const today = new Date().toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});
+
+  let areasToShow = areaFilter==='all' ? AREAS : [areaFilter];
+  let html = RPT_CSS + `
+    <div class="rpt-header">
+      <div>
+        <div class="rpt-logo">IRVINS</div>
+        <div class="rpt-title">GMP Audit Report — Area Results</div>
+        <div class="rpt-meta">Month: ${month} &nbsp;|&nbsp; ${roundLabel} &nbsp;|&nbsp; Generated: ${today}</div>
+      </div>
+    </div>
+    <div class="rpt-body">
+  `;
+
+  // Summary table
+  html += `<div class="section-title">Summary — All Areas</div>
+    <table><thead><tr><th>Area</th><th>R1 Score</th><th>R1 %</th><th>R2 Score</th><th>R2 %</th><th>Avg %</th><th>NCs</th><th>Open</th></tr></thead><tbody>`;
+  AREAS.forEach(a=>{
+    const d=liveData[a]&&liveData[a][month]?liveData[a][month]:{r1:null,r2:null};
+    const r1p=d.r1!=null?Math.round(d.r1/MAX_PTS[a]*100):null;
+    const r2p=d.r2!=null?Math.round(d.r2/MAX_PTS[a]*100):null;
+    const vals=[d.r1,d.r2].filter(v=>v!=null);
+    const avgP=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length/MAX_PTS[a]*100):null;
+    const ncs=ncStore.filter(n=>n.area===a&&n.monthKey===month);
+    const openN=ncs.filter(n=>n.status!=='Closed').length;
+    const cls=avgP!=null?(avgP>=90?'score-g':avgP>=75?'score-a':'score-r'):'';
+    html+=`<tr><td style="font-weight:600">${a}</td>
+      <td>${d.r1!=null?d.r1:'—'}</td><td>${r1p!=null?`<span class="score-box ${r1p>=90?'score-g':r1p>=75?'score-a':'score-r'}">${r1p}%</span>`:'—'}</td>
+      <td>${d.r2!=null?d.r2:'—'}</td><td>${r2p!=null?`<span class="score-box ${r2p>=90?'score-g':r2p>=75?'score-a':'score-r'}">${r2p}%</span>`:'—'}</td>
+      <td>${avgP!=null?`<span class="score-box ${cls}">${avgP}%</span>`:'—'}</td>
+      <td style="color:${ncs.length>0?'#8B1A1A':'#2D6A1F'};font-weight:700">${ncs.length}</td>
+      <td style="color:${openN>0?'#8B1A1A':'#2D6A1F'};font-weight:700">${openN}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+
+  // Detail per area
+  areasToShow.forEach((area,idx)=>{
+    const sc = getScore(area,month,round);
+    const pct = sc!=null?Math.round(sc/MAX_PTS[area]*100):null;
+    const cls = pct!=null?(pct>=90?'score-g':pct>=75?'score-a':'score-r'):'';
+    if(idx>0 && areaFilter==='all') html += '<div class="page-break"></div>';
+    html += `<div class="section-title">${area}</div>`;
+    html += `<div class="area-header"><span>${area} — ${month} ${round!=='avg'?'Round '+round:'R1 & R2 Avg'}</span>${pct!=null?`<span class="score-box ${cls}">${sc} / ${MAX_PTS[area]} &nbsp; ${pct}%</span>`:'<span>No data</span>'}</div>`;
+    html += `<table><thead><tr><th style="width:5%">#</th><th style="width:45%">Question</th><th style="width:8%">Pts</th><th style="width:8%">Result</th><th style="width:34%">Remarks / PIC / Action</th></tr></thead><tbody>`;
+    const qids = AREA_Q[area]||[];
+    qids.forEach(id=>{
+      const q=qMap[id]; if(!q) return;
+      // Try to get result from auditState
+      const s1=auditState[area][1][id];
+      const s2=auditState[area][2][id];
+      const s = round==='2'?s2:(round==='1'?s1:(s1||s2));
+      const r=s?s.result:null;
+      const rowCls=r==='fail'?'nc-row':'';
+      html+=`<tr class="${rowCls}"><td>${id}</td><td>${q.text}</td><td>${q.pts}</td>
+        <td class="${r||''}">${r==='pass'?'✓ PASS':r==='fail'?'✗ FAIL':r==='na'?'N/A':'—'}</td>
+        <td style="font-size:11px">${r==='fail'&&s?(s.remark?'<strong>Finding:</strong> '+s.remark+'<br>':'')+
+        (s.pic&&s.pic!=='— Select PIC —'?'<strong>PIC:</strong> '+s.pic+'<br>':'')+
+        (s.action?'<strong>Action:</strong> '+s.action:''):'—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+
+    const areaNCs=ncStore.filter(n=>n.area===area&&n.monthKey===month);
+    if(areaNCs.length>0){
+      html+=`<div style="font-size:11px;font-weight:700;color:#8B1A1A;margin:8px 0 4px">Non-conformities (${areaNCs.length}):</div>`;
+      html+=`<table><thead><tr><th>Q</th><th>Finding</th><th>PIC</th><th>Status</th><th>Corrected</th></tr></thead><tbody>`;
+      areaNCs.forEach(n=>{html+=`<tr class="nc-row"><td>Q${n.qid}</td><td>${n.qtext}${n.remark?' — '+n.remark:''}</td><td>${n.pic||'—'}</td><td>${n.status}</td><td>${n.correctedDate||'—'}</td></tr>`;});
+      html+='</tbody></table>';
+    }
+  });
+
+  html += `<div class="footer">IRVINS (Cocoba Pte Ltd) &nbsp;|&nbsp; GMP Audit Report &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; INTERNAL USE ONLY</div></div>`;
+  document.getElementById('reportPreview').innerHTML = html;
+}
+
+function renderTrendReport() {
+  const view = document.getElementById('rptView')?.value||'all';
+  let areas=AREAS; if(view==='production')areas=PRODUCTION; if(view==='support')areas=SUPPORT;
+  const months=getAllMonths();
+  const today=new Date().toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});
+
+  let html=RPT_CSS+`
+    <div class="rpt-header">
+      <div>
+        <div class="rpt-logo">IRVINS</div>
+        <div class="rpt-title">GMP Audit Trend Report</div>
+        <div class="rpt-meta">View: ${view==='all'?'All Areas':view==='production'?'Production Areas':'Support Areas'} &nbsp;|&nbsp; Generated: ${today}</div>
+      </div>
+    </div>
+    <div class="rpt-body">
+    <div class="section-title">Monthly Score Trend by Area (%)</div>
+    <table><thead><tr><th style="width:22%">Area</th>`;
+  months.forEach(m=>{ html+=`<th colspan="2" style="text-align:center;background:#F9F9F9">${m}</th>`; });
+  html+=`</tr><tr><th></th>`;
+  months.forEach(()=>{ html+=`<th class="round-label" style="text-align:center">R1</th><th class="round-label" style="text-align:center">R2</th>`; });
+  html+=`</tr></thead><tbody>`;
+
+  areas.forEach(area=>{
+    html+=`<tr><td style="font-weight:600">${area}</td>`;
+    months.forEach(m=>{
+      const d=liveData[area]&&liveData[area][m]?liveData[area][m]:{r1:null,r2:null};
+      const r1p=d.r1!=null?Math.round(d.r1/MAX_PTS[area]*100):null;
+      const r2p=d.r2!=null?Math.round(d.r2/MAX_PTS[area]*100):null;
+      const fmt=(p)=>p!=null?`<span class="score-box ${p>=90?'score-g':p>=75?'score-a':'score-r'}">${p}%</span>`:'—';
+      html+=`<td class="trend-cell">${fmt(r1p)}</td><td class="trend-cell">${fmt(r2p)}</td>`;
+    });
+    html+=`</tr>`;
+  });
+
+  // Site average row
+  html+=`<tr style="background:#1C1C1C;color:#FFFFFF"><td style="font-weight:700;color:#F5C400">Site Average</td>`;
+  months.forEach(m=>{
+    const r1=avgPct(m,'1'); const r2=avgPct(m,'2');
+    html+=`<td class="trend-cell" style="color:#F5C400;font-weight:700">${r1!=null?r1+'%':'—'}</td><td class="trend-cell" style="color:#F5C400;font-weight:700">${r2!=null?r2+'%':'—'}</td>`;
+  });
+  html+=`</tr></tbody></table>
+
+  <div class="section-title">Round 1 vs Round 2 Comparison — Latest Month (${months[months.length-1]||'—'})</div>
+  <table><thead><tr><th>Area</th><th>R1 Score</th><th>R1 %</th><th>R2 Score</th><th>R2 %</th><th>Δ R1→R2</th></tr></thead><tbody>`;
+
+  const lastMonth=months[months.length-1];
+  if(lastMonth){
+    areas.forEach(area=>{
+      const d=liveData[area]&&liveData[area][lastMonth]?liveData[area][lastMonth]:{r1:null,r2:null};
+      const r1p=d.r1!=null?Math.round(d.r1/MAX_PTS[area]*100):null;
+      const r2p=d.r2!=null?Math.round(d.r2/MAX_PTS[area]*100):null;
+      const delta=r1p!=null&&r2p!=null?r2p-r1p:null;
+      html+=`<tr>
+        <td style="font-weight:600">${area}</td>
+        <td>${d.r1!=null?d.r1:'—'}</td>
+        <td>${r1p!=null?`<span class="score-box ${r1p>=90?'score-g':r1p>=75?'score-a':'score-r'}">${r1p}%</span>`:'—'}</td>
+        <td>${d.r2!=null?d.r2:'—'}</td>
+        <td>${r2p!=null?`<span class="score-box ${r2p>=90?'score-g':r2p>=75?'score-a':'score-r'}">${r2p}%</span>`:'—'}</td>
+        <td style="font-weight:700;color:${delta!=null?(delta>=0?'#2D6A1F':'#8B1A1A'):'#888'}">${delta!=null?(delta>=0?'+':'')+delta+'%':'—'}</td>
+      </tr>`;
+    });
+  }
+  html+=`</tbody></table>
+  <div class="footer">IRVINS (Cocoba Pte Ltd) &nbsp;|&nbsp; GMP Trend Report &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; INTERNAL USE ONLY</div></div>`;
+  document.getElementById('reportPreview').innerHTML=html;
+}
+
+function renderNCReport() {
+  const month=document.getElementById('rptMonth')?.value||'';
+  const status=document.getElementById('rptStatus')?.value||'';
+  const today=new Date().toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});
+  let ncs=ncStore.filter(n=>{
+    if(month&&n.monthKey!==month)return false;
+    if(status&&n.status!==status)return false;
+    return true;
+  });
+  ncs.sort((a,b)=>{const o={'Open':0,'In Progress':1,'Closed':2};return(o[a.status]||0)-(o[b.status]||0);});
+
+  const open=ncs.filter(n=>n.status==='Open').length;
+  const inp=ncs.filter(n=>n.status==='In Progress').length;
+  const closed=ncs.filter(n=>n.status==='Closed').length;
+
+  let html=RPT_CSS+`
+    <div class="rpt-header">
+      <div>
+        <div class="rpt-logo">IRVINS</div>
+        <div class="rpt-title">GMP Non-Conformity Report</div>
+        <div class="rpt-meta">Month: ${month||'All'} &nbsp;|&nbsp; Status: ${status||'All'} &nbsp;|&nbsp; Generated: ${today}</div>
+      </div>
+    </div>
+    <div class="rpt-body">
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <div style="background:#FDE8E8;padding:10px 18px;border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700;color:#8B1A1A">${open}</div><div style="font-size:10px;text-transform:uppercase;color:#8B1A1A;font-weight:700">Open</div></div>
+      <div style="background:#FFF3CD;padding:10px 18px;border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700;color:#7A4F00">${inp}</div><div style="font-size:10px;text-transform:uppercase;color:#7A4F00;font-weight:700">In Progress</div></div>
+      <div style="background:#E8F5E3;padding:10px 18px;border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700;color:#2D6A1F">${closed}</div><div style="font-size:10px;text-transform:uppercase;color:#2D6A1F;font-weight:700">Closed</div></div>
+      <div style="background:#F9F9F9;padding:10px 18px;border-radius:6px;text-align:center"><div style="font-size:22px;font-weight:700">${ncs.length}</div><div style="font-size:10px;text-transform:uppercase;color:#555;font-weight:700">Total</div></div>
+    </div>
+    <div class="section-title">Non-Conformity Register</div>
+    <table><thead><tr>
+      <th style="width:4%">#</th>
+      <th style="width:13%">Area</th>
+      <th style="width:4%">Q</th>
+      <th style="width:4%">Rnd</th>
+      <th style="width:8%">Date</th>
+      <th style="width:22%">Finding</th>
+      <th style="width:10%">PIC</th>
+      <th style="width:14%">Required Action</th>
+      <th style="width:8%">Status</th>
+      <th style="width:8%">Corrected</th>
+      <th style="width:5%">Pts</th>
+    </tr></thead><tbody>`;
+
+  ncs.forEach((n,i)=>{
+    const rowStyle=n.status==='Closed'?'background:#F5FDF0':n.status==='In Progress'?'background:#FFFDF0':'background:#FEF2F2';
+    html+=`<tr style="${rowStyle}">
+      <td>${i+1}</td>
+      <td style="font-weight:600;font-size:11px">${n.area}</td>
+      <td>Q${n.qid}</td>
+      <td style="text-align:center">R${n.round||1}</td>
+      <td style="font-size:11px">${n.date}</td>
+      <td style="font-size:11px"><strong>${n.qtext}</strong>${n.remark?'<br><em>'+n.remark+'</em>':''}</td>
+      <td style="font-size:11px">${n.pic&&n.pic!=='— Select PIC —'?n.pic:'—'}</td>
+      <td style="font-size:11px">${n.action||'—'}</td>
+      <td><span class="score-box ${n.status==='Closed'?'score-g':n.status==='In Progress'?'score-a':'score-r'}">${n.status}</span></td>
+      <td style="font-size:11px">${n.correctedDate||'—'}${n.correctionNote?'<br><em>'+n.correctionNote+'</em>':''}</td>
+      <td style="text-align:center;font-weight:700;color:#8B1A1A">-${n.pts}</td>
+    </tr>`;
+  });
+
+  if(ncs.length===0)html+=`<tr><td colspan="11" style="text-align:center;color:#888;padding:20px">No non-conformities found for selected filters.</td></tr>`;
+
+  html+=`</tbody></table>
+
+  <div class="section-title">NC Summary by Area</div>
+  <table><thead><tr><th>Area</th><th>Total NCs</th><th>Open</th><th>In Progress</th><th>Closed</th><th>Pts Lost</th></tr></thead><tbody>`;
+  AREAS.forEach(area=>{
+    const aNCs=ncs.filter(n=>n.area===area);
+    if(!aNCs.length)return;
+    const aOpen=aNCs.filter(n=>n.status==='Open').length;
+    const aInp=aNCs.filter(n=>n.status==='In Progress').length;
+    const aClosed=aNCs.filter(n=>n.status==='Closed').length;
+    const ptsLost=aNCs.reduce((s,n)=>s+n.pts,0);
+    html+=`<tr><td style="font-weight:600">${area}</td>
+      <td style="text-align:center;font-weight:700">${aNCs.length}</td>
+      <td style="text-align:center;color:${aOpen>0?'#8B1A1A':'#888'};font-weight:700">${aOpen}</td>
+      <td style="text-align:center;color:${aInp>0?'#7A4F00':'#888'};font-weight:700">${aInp}</td>
+      <td style="text-align:center;color:${aClosed>0?'#2D6A1F':'#888'};font-weight:700">${aClosed}</td>
+      <td style="text-align:center;color:#8B1A1A;font-weight:700">-${ptsLost}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>
+  <div class="footer">IRVINS (Cocoba Pte Ltd) &nbsp;|&nbsp; GMP NC Report &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; CONFIDENTIAL — INTERNAL USE ONLY</div></div>`;
+  document.getElementById('reportPreview').innerHTML=html;
+}
+
+async function printReport() {
+  const preview = document.getElementById('reportPreview');
+  if (!preview || !preview.innerHTML.trim()) {
+    showToast('No report to download. Please generate a report first.'); return;
+  }
+
+  // Get report label for filename
+  const btns = document.querySelectorAll('.report-card-btn.active .r-title');
+  const rLabel = btns.length ? btns[0].textContent.trim().replace(/[^a-zA-Z0-9]/g,'_') : 'GMP_Report';
+  const today = new Date().toLocaleDateString('en-SG',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
+  const filename = `IRVINS_GMP_${rLabel}_${today}.pdf`;
+
+  // Show loading state
+  const btn = document.getElementById('downloadPdfBtn');
+  const origText = btn.textContent;
+  btn.textContent = 'Generating PDF…';
+  btn.disabled = true;
+
+  try {
+    // Create a hidden off-screen render container sized to A4 width (794px = 210mm at 96dpi)
+    const container = document.createElement('div');
+    container.style.cssText = [
+      'position:fixed','top:0','left:-9999px',
+      'width:794px','background:#FFFFFF',
+      'color:#111111','font-family:Arial,sans-serif',
+      'z-index:-1','padding:0','margin:0'
+    ].join(';');
+    container.innerHTML = preview.innerHTML;
+    document.body.appendChild(container);
+
+    // Wait a tick for rendering
+    await new Promise(r => setTimeout(r, 200));
+
+    const canvas = await html2canvas(container, {
+      scale: 2,                  // 2x for crisp text
+      useCORS: true,
+      backgroundColor: '#FFFFFF',
+      logging: false,
+      windowWidth: 794,
+    });
+
+    document.body.removeChild(container);
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+
+    // A4 dimensions in mm
+    const A4_W = 210, A4_H = 297;
+    const imgW = A4_W;
+    const imgH = (canvas.height * A4_W) / canvas.width;
+
+    // Create PDF — add pages if content is taller than one A4
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    let y = 0;
+    while (y < imgH) {
+      if (y > 0) pdf.addPage();
+      // Clip the current page slice
+      pdf.addImage(imgData, 'JPEG', 0, -y, imgW, imgH);
+      y += A4_H;
+    }
+
+    pdf.save(filename);
+    showToast(`PDF saved — ${filename}`);
+  } catch(err) {
+    console.error('PDF error:', err);
+    showToast('PDF generation failed. Try a smaller report or fewer areas.');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+// ── NAV & UTILS ──
+function showPage(name, tab) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  tab.classList.add('active');
+  if(name==='dashboard'){rebuildMonthSelectors();renderDashboard();}
+  if(name==='nctracker'){renderNCTracker();}
+  if(name==='summary'){rebuildMonthSelectors();renderSummary();}
+  if(name==='reports'){buildReportControls();renderReport();}
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── INIT ──
+initAuditDate();
+rebuildMonthSelectors();
+buildChips();
+renderAuditArea();
+initNCFilters();
+updateNCBadge();
+buildReportControls();
+renderReport();
+</script>
+</body>
+</html>
